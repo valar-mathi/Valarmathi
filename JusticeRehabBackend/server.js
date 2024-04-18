@@ -1,38 +1,40 @@
-// Load environment variables
 require('dotenv').config();
 
-// Import Express
 const express = require('express');
+const mongoose = require('mongoose');
+const userRoutes = require('./routes/userRoutes');
+const articleRoutes = require('./routes/articleRoutes');
+const legalAidRoutes = require('./routes/legalAidRoutes'); // Ensure this path is correct
 
-// Initialize Express
+// Initialize Express app
 const app = express();
 
-// Import Mongoose
-const mongoose = require('mongoose');
+// Connect to MongoDB using Mongoose
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB connected successfully.');
+    } catch (err) {
+        console.error('Failed to connect to MongoDB:', err.message);
+        process.exit(1);
+    }
+};
 
-// MongoDB Atlas Connection
-const dbUser = process.env.DB_USERNAME;  // Environment variable for MongoDB Atlas username
-const dbPassword = encodeURIComponent(process.env.DB_PASSWORD);  // Environment variable for MongoDB Atlas password, URL-encoded
-const clusterUrl = 'cluster0.h9vkqyp.mongodb.net';
-const dbName = 'JusticeRehab';  // The database name you want to connect to or create
+connectDB();
 
-// Construct the MongoDB Atlas connection string
-const uri = `mongodb+srv://${dbUser}:${dbPassword}@${clusterUrl}/${dbName}?retryWrites=true&w=majority`;
+app.use(express.json()); // Middleware to parse JSON bodies
 
-// Connect to MongoDB Atlas using Mongoose
-mongoose.connect(uri)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('Error connecting to MongoDB:', err));
+// API routes
+app.use('/api/users', userRoutes);
+app.use('/api/articles', articleRoutes);
+app.use('/api/legal-aid', legalAidRoutes); // Attach legal aid routes
 
-// Define the port to run the server on
-const PORT = process.env.PORT || 3000;
-
-// Basic route for testing the server
+// Basic test route to confirm server operation
 app.get('/', (req, res) => {
-  res.send('JusticeRehab Backend is up and running!');
+    res.send('JusticeRehab Backend is up and running!');
 });
 
-// Start the server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
